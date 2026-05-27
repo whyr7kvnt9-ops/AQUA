@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planted Tank</title>
+    <style>
+        body {
+            background-color: #282828;
+            margin: 0;
+            padding: 0;
+            color: #ffffff;
+            font-family: SimHei, "Heiti SC", "Microsoft YaHei", sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .hero-image-container {
+            width: 100%;
+            height: 250px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .hero-image-container {
+                height: 400px;
+                margin-bottom: 2rem;
+            }
+        }
+        @media (min-width: 1200px) {
+            .hero-image-container {
+                height: 500px;
+            }
+        }
+        .hero-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+        }
+        .content-wrapper {
+            width: 90%;
+            max-width: 800px;
+            padding: 20px;
+            background-color: #282828;
+            margin-bottom: 40px;
+            border-radius: 4px;
+        }
+        @media (min-width: 768px) {
+            .content-wrapper {
+                width: 100%;
+                padding: 40px;
+                box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5), 20px 0 50px rgba(0, 0, 0, 0.5);
+                margin-bottom: 60px;
+            }
+        }
+        h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center; /* 改为居中处理 */
+            margin-bottom: 1rem;
+        }
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2.25rem;
+                text-align: center; /* 确保电脑端也居中 */
+                margin-bottom: 1.5rem;
+            }
+        }
+        p {
+            font-size: 1rem;
+            text-align: left;
+            text-indent: 2em;
+            line-height: 1.6;
+            margin: 0 0 1.2em 0;
+        }
+        @media (min-width: 768px) {
+            p {
+                font-size: 1.25rem;
+                margin: 0 0 1.5em 0;
+            }
+        }
+        p:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* 底部三个平行文本框样式 */
+         .bottom-container {
+              width: 100%;
+              max-width: 864px; /* 原 960px 缩小 10% 为 864px */
+              margin-top: 30px; /* 与上面文本框间隔30像素 */
+              display: flex;
+              flex-direction: column;
+              align-items: center; /* 确保子元素在容器中居中 */
+              gap: 15px; /* 改为 15 像素 */
+               padding: 0 20px 60px 20px;
+           }
+           @media (min-width: 768px) {
+               .bottom-container {
+                   flex-direction: row;
+                   justify-content: center; /* 居中排列 */
+                   padding: 0 0 60px 0;
+                   gap: 15px; /* 改为 15 像素 */
+               }
+           }
+          .info-box {
+            width: 100%;
+            max-width: 288px;
+            background-color: #282828;
+            padding: 25px;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+            font-family: SimHei, sans-serif;
+            text-align: center;
+            cursor: pointer; /* 增加手型，暗示可点击 */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .info-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 详情弹窗样式 */
+        #detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        #detail-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background-color: #282828;
+            color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            font-family: SimHei, sans-serif;
+            line-height: 1.8;
+            text-align: left;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        #detail-modal.active .modal-content {
+            transform: scale(1);
+        }
+        .modal-content h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffffff;
+            border-bottom: 1px solid #555;
+            padding-bottom: 15px;
+        }
+        .detail-item {
+            margin-bottom: 25px;
+        }
+        .detail-category {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #ffffff;
+            margin-top: 20px;
+            display: block;
+        }
+        .detail-desc {
+            padding-left: 20px;
+            color: #cccccc;
+            font-size: 1rem;
+        }
+        .detail-price {
+            color: #888;
+            font-style: italic;
+        }
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2rem;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close-modal:hover {
+            color: #fff;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+            margin-bottom: 30px; /* 增加底部间距 */
+        }
+        @media (min-width: 768px) {
+            .image-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+                margin-top: 30px;
+                margin-bottom: 40px;
+            }
+        }
+        .special-link {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin: 0 4px;
+            vertical-align: baseline;
+            position: relative; /* 开启相对定位 */
+            left: -20px;       /* 向左移动 20 像素 */
+            /* 黑色描边和外发光效果 */
+            text-shadow: 
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000,
+                 0 0 10px rgba(255, 255, 255, 0.8), 
+                 0 0 20px rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            animation: pulse 1.5s infinite ease-in-out;
+            transform-origin: center;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        .special-link:hover {
+            color: #cccccc;
+            text-shadow: 
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000,
+                 0 0 15px rgba(255, 255, 255, 1), 
+                 0 0 25px rgba(255, 255, 255, 0.7);
+        }
+        .grid-item {
+            width: 100%;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        .grid-item:hover {
+            transform: scale(1.02);
+        }
+        .grid-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* 全屏放大效果样式 */
+        #fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: background-color 0.8s ease;
+            cursor: pointer;
+        }
+
+        #fullscreen-container.active {
+            display: flex;
+            background-color: rgba(0, 0, 0, 0.7); /* 慢慢隐去颜色，被70%不透明度遮蔽 */
+        }
+
+        #zoomed-image-wrapper {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        #zoomed-image {
+            width: 100%;
+            height: 100%;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+
+        /* 图片说明遮罩样式 */
+        #image-description-overlay {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            height: auto;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000000;
+            font-family: SimHei, "Heiti SC", "Microsoft YaHei", sans-serif;
+            padding: 40px 20px 20px 20px;
+            box-sizing: border-box;
+            z-index: 2;
+            transition: bottom 0.6s ease-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            font-weight: bold;
+            mask-image: linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%);
+        }
+
+        @media (min-width: 768px) {
+            #image-description-overlay {
+                font-size: 1.25rem;
+                padding: 60px 30px 30px 30px;
+            }
+        }
+
+        #fullscreen-container.active #image-description-overlay {
+            bottom: 0;
+            transition-delay: 0.4s;
+        }
+
+        #fullscreen-container.active #zoomed-image {
+            /* 激活时的位置和尺寸将由 JS 动态设置 */
+        }
+    </style>
+</head>
+<body>
+    <div id="detail-modal" onclick="closeDetailModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeDetailModal(event)">&times;</span>
+            <h2>草缸设备清单 (120x50x50cm)</h2>
+            
+            <div class="detail-item">
+                <span class="detail-category">鱼缸</span>
+                <div class="detail-desc">超白玻璃鱼缸 <span class="detail-price">｜ 450</span></div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-category">鱼缸底柜</span>
+                <div class="detail-desc">实木：好看但有变形的风险，小柜子居多 <span class="detail-price">｜ 300</span></div>
+                <div class="detail-desc">板材：稳定耐用，样式丰富内部结构可定制 <span class="detail-price">｜ 500-800</span></div>
+                <div class="detail-desc">合金框架：看起来最扎实的，方便后期走线排管，适合DIY <span class="detail-price">｜ 500</span></div>
+                <div class="detail-desc">玻璃：简约好看但是贵 <span class="detail-price">｜ 大鱼缸没有这个选项哦</span></div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-category">水草灯</span>
+                <div class="detail-desc">平板灯：可吊可放置 <span class="detail-price">｜ 900</span></div>
+                <div class="detail-desc">筒灯：只可以吊装 <span class="detail-price">｜ 800×2=1600</span></div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-category">二氧化碳设备</span>
+                <div class="detail-desc">反应式钢瓶：小苏打＋柠檬酸，两个月加一次原料 <span class="detail-price">｜ 350</span></div>
+                <div class="detail-desc">建设钢瓶：找气站充气，优先推荐，半年多加一次 <span class="detail-price">｜ 350</span></div>
+                <div class="detail-desc">二氧化碳灭火器：找气站充气，半年多加一次 <span class="detail-price">｜ 200</span></div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-category">过滤设备</span>
+                <div class="detail-desc">背滤：适合中小型鱼缸</div>
+                <div class="detail-desc">滴滤：适合有特殊情节的玩家</div>
+                <div class="detail-desc">底滤：过滤效果最好占地最大，草缸完全没必要</div>
+                <div class="detail-desc">滤桶：最主流，最推荐 <span class="detail-price">｜ 750</span></div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-category">底床</span>
+                <div class="detail-desc">沙子</div>
+                <div class="detail-desc">水草泥 <span class="detail-price">｜ 200</span></div>
+                <div class="detail-desc">火山石 <span class="detail-price">｜ 100</span></div>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-category">造景材料 <span class="detail-price">｜ 200—500</span></span>
+                <div class="detail-desc">石头</div>
+                <div class="detail-desc">木材</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen-container" onclick="closeFullscreen()">
+        <div id="zoomed-image-wrapper">
+            <div id="image-description-overlay">
+                传统ADA风格，讲究日式禅意与诧寂感，大面积留白让飘动的水草成为鱼缸主角，着力营造空灵悠远的沉浸式意境
+            </div>
+            <img id="zoomed-image" src="" alt="Zoomed View">
+        </div>
+    </div>
+    <div class="hero-image-container">
+        <img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEUm2VqFpovrVLrKbdwJ5cUBAcJebHIOwACQCUAAleauVSISvJ2mKXKGzsE.jpg" alt="Planted Tank Hero" class="hero-image">
+    </div>
+    <div class="content-wrapper">
+        <h1>以水为风，雕琢奇观</h1>
+        <p>不同于其他的鱼缸展现的是一个多彩的水下世界，草缸更多的是在鱼缸中复刻一个个水上奇观。从最近爆火的法罗群岛造景到经久不衰的雨林风造景，草缸造景者总是想尽千方百计只为把心之所向微缩于鱼缸之中。</p>
+        <p>总的来说草缸造景有两种风格，荷兰式造景风格（荷兰景）和自然式造景风格（自然景）。荷兰景最早起源于荷兰NBAT(Nederlandse Bond Aqua Terra，荷兰水族暨两栖爬虫协会)，以建造水下花园为目标，更讲究植物种类的搭配与种植区域规划，不用一块石头与木头是真真正正的“草缸”。自然景则有很多细分种类，岛屿、流木、雨林、草原、悬崖、山涧、山林、雨林等复刻自然风光的造景都可以笼统的归类在自然景里。近几年比赛的趋势更讲究自然景的形似和层次丰富，虽然确实一眼很好看，但是缺少了留白看久了感觉不通气，少了一些自然该有的灵动。</p>
+        <div class="image-grid">
+            <div class="grid-item" onclick="openFullscreen(this, '传统ADA风格，讲究日式禅意与诧寂感，大面积留白让飘动的水草成为鱼缸主角，着力营造空灵悠远的沉浸式意境')">
+                <img src="https://iaplc.com/gallery/cn/image/preview?prefix=20252&app_id=J102-8424&1779863186" alt="IAPLC Gallery 1">
+            </div>
+            <div class="grid-item" onclick="openFullscreen(this, '森林流木风格，\&quot;一鲸落万物生\&quot;尽管树干的大部分已经被覆盖，但依然骨架分明苍劲有力')">
+                <img src="https://iaplc.com/gallery/cn/image/preview?prefix=20252&app_id=W124-0995&1779863186" alt="IAPLC Gallery 2">
+            </div>
+            <div class="grid-item" onclick="openFullscreen(this, '雨林风格造景，树干之上争抢每一缕阳光，树干之下攀附缠绕绞杀，雨林之中看似静谧实则处处都是你死我活的厮杀')">
+                <img src="https://iaplc.com/gallery/cn/image/preview?prefix=20252&app_id=W111-0803&1779863186" alt="IAPLC Gallery 3">
+            </div>
+            <div class="grid-item" onclick="openFullscreen(this, '山坡风格造景，巨石之间碧草如茵，仿佛一秒钟坠入《海蒂与爷爷》中的阿尔卑斯之上，鱼儿也如羊群一样结伴而行，神圣静谧悠然')">
+                <img src="https://iaplc.com/gallery/cn/image/preview?prefix=20252&app_id=W114-7888&1779863186" alt="IAPLC Gallery 4">
+            </div>
+            <div class="grid-item" onclick="openFullscreen(this, '岛屿风格造景，如同上帝创造亚当，但如果指尖相碰，便会迸发出更加绚丽的色彩')">
+                <img src="https://iaplc.com/gallery/cn/image/preview?prefix=20252&app_id=W119-5886&1779885841" alt="IAPLC Gallery 5">
+            </div>
+            <div class="grid-item" onclick="openFullscreen(this, '峡谷风格造景，两岸山峰层叠高耸，险峻又巍峨，激流滔滔')">
+                 <img src="https://iaplc.com/gallery/cn/image/preview?prefix=20252&app_id=W107-0775&1779885985" alt="IAPLC Gallery 6">
+             </div>
+         </div>
+         <p>这些都是2025年IAPLC水族造景大赛的获奖作品，想看更多<a href="https://iaplc.com/gallery/cn/index?page=1" target="_blank" class="special-link">点击这里</a>。</p>
+          <p>草缸可能是最烦琐的缸，也可能是未来操心最少的缸。烦琐在于从开缸初期的造景到种草，各种水质参数的监控调节，到中后期稳定之后的定期修剪擦藻。但是一旦度过了前期，水质稳定之后你可以半年不换水，只需要静静看这水里面的植物长满鱼缸，而因为有水草帮助吸收水里的养分，草缸后期也不容易长藻。</p>
+       </div>
+
+       <div class="bottom-container">
+            <div class="info-box" onclick="openDetailModal('equipment')">
+                   <h3>设备</h3>
+                   <p style="font-size: 0.9rem; text-indent: 0; line-height: 1.6;">
+                       一个合格草缸需要配备的所有设备，当然也不全都是必需品
+                   </p>
+               </div>
+             <div class="info-box" onclick="openDetailModal('tools')">
+                  <h3>工具</h3>
+                  <p style="font-size: 0.9rem; text-indent: 0; line-height: 1.6;">
+                      所需要的用于后期鱼缸维护的物品
+                  </p>
+              </div>
+            <div class="info-box" onclick="openDetailModal('plants')">
+                 <h3>水草</h3>
+                 <p style="font-size: 0.9rem; text-indent: 0; line-height: 1.6;">
+                     装点鱼缸的小玩意儿，让人又爱又恨
+                 </p>
+             </div>
+        </div>
+
+    <script>
+        let originalRect = null;
+
+        function openFullscreen(element, description) {
+            const container = document.getElementById('fullscreen-container');
+            const wrapper = document.getElementById('zoomed-image-wrapper');
+            const zoomedImg = document.getElementById('zoomed-image');
+            const descOverlay = document.getElementById('image-description-overlay');
+            const clickedImg = element.querySelector('img');
+            
+            // 设置文字内容
+            descOverlay.textContent = description;
+            
+            originalRect = clickedImg.getBoundingClientRect();
+            
+            zoomedImg.src = clickedImg.src;
+            wrapper.style.transition = 'none';
+            wrapper.style.top = originalRect.top + 'px';
+            wrapper.style.left = originalRect.left + 'px';
+            wrapper.style.width = originalRect.width + 'px';
+            wrapper.style.height = originalRect.height + 'px';
+            
+            container.style.display = 'flex';
+            wrapper.offsetHeight;
+
+            setTimeout(() => {
+                container.classList.add('active');
+                wrapper.style.transition = 'all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)';
+                
+                const vh = window.innerHeight;
+                const vw = window.innerWidth;
+                const targetMaxW = vw * 0.9;
+                const targetMaxH = vh * 0.9;
+                
+                const imgRatio = clickedImg.naturalWidth / clickedImg.naturalHeight;
+                let finalW, finalH;
+                
+                if (targetMaxW / targetMaxH > imgRatio) {
+                    finalH = targetMaxH;
+                    finalW = finalH * imgRatio;
+                } else {
+                    finalW = targetMaxW;
+                    finalH = finalW / imgRatio;
+                }
+                
+                wrapper.style.width = finalW + 'px';
+                wrapper.style.height = finalH + 'px';
+                wrapper.style.top = (vh - finalH) / 2 + 'px';
+                wrapper.style.left = (vw - finalW) / 2 + 'px';
+            }, 10);
+        }
+
+        function closeFullscreen() {
+            const container = document.getElementById('fullscreen-container');
+            const wrapper = document.getElementById('zoomed-image-wrapper');
+            
+            container.classList.remove('active');
+            
+            if (originalRect) {
+                wrapper.style.top = originalRect.top + 'px';
+                wrapper.style.left = originalRect.left + 'px';
+                wrapper.style.width = originalRect.width + 'px';
+                wrapper.style.height = originalRect.height + 'px';
+            }
+            
+            setTimeout(() => {
+                container.style.display = 'none';
+            }, 600);
+        }
+
+        /* 详情弹窗逻辑 */
+        function openDetailModal(type) {
+            const modal = document.getElementById('detail-modal');
+            const content = modal.querySelector('.modal-content');
+            
+            // 根据点击类型更新内容
+            if (type === 'equipment') {
+                content.innerHTML = `
+                    <span class="close-modal" onclick="closeDetailModal(event)">&times;</span>
+                    <h2>草缸设备清单 (120x50x50cm)</h2>
+                    
+                    <div class="detail-item">
+                        <span class="detail-category">鱼缸</span>
+                        <div class="detail-desc">超白玻璃鱼缸 <span class="detail-price">｜ 450</span></div>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-category">鱼缸底柜</span>
+                        <div class="detail-desc">实木：好看但有变形的风险，小柜子居多 <span class="detail-price">｜ 300</span></div>
+                        <div class="detail-desc">板材：稳定耐用，样式丰富内部结构可定制 <span class="detail-price">｜ 500-800</span></div>
+                        <div class="detail-desc">合金框架：看起来最扎实的，方便后期走线排管，适合DIY <span class="detail-price">｜ 500</span></div>
+                        <div class="detail-desc">玻璃：简约好看但是贵 <span class="detail-price">｜ 大鱼缸没有这个选项哦</span></div>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-category">水草灯</span>
+                        <div class="detail-desc">平板灯：可吊可放置 <span class="detail-price">｜ 900</span></div>
+                        <div class="detail-desc">筒灯：只可以吊装 <span class="detail-price">｜ 800×2=1600</span></div>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-category">二氧化碳设备</span>
+                        <div class="detail-desc">反应式钢瓶：小苏打＋柠檬酸，两个月加一次原料 <span class="detail-price">｜ 350</span></div>
+                        <div class="detail-desc">建设钢瓶：找气站充气，优先推荐，半年多加一次 <span class="detail-price">｜ 350</span></div>
+                        <div class="detail-desc">二氧化碳灭火器：找气站充气，半年多加一次 <span class="detail-price">｜ 200</span></div>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-category">过滤设备</span>
+                        <div class="detail-desc">背滤：适合中小型鱼缸</div>
+                        <div class="detail-desc">滴滤：适合有特殊情节的玩家</div>
+                        <div class="detail-desc">底滤：过滤效果最好占地最大，草缸完全没必要</div>
+                        <div class="detail-desc">滤桶：最主流，最推荐 <span class="detail-price">｜ 750</span></div>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-category">底床</span>
+                        <div class="detail-desc">沙子</div>
+                        <div class="detail-desc">水草泥 <span class="detail-price">｜ 200</span></div>
+                        <div class="detail-desc">火山石 <span class="detail-price">｜ 100</span></div>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-category">造景材料 <span class="detail-price">｜ 200—500</span></span>
+                        <div class="detail-desc">石头</div>
+                        <div class="detail-desc">木材</div>
+                    </div>
+                `;
+            } else if (type === 'tools') {
+                content.innerHTML = `
+                    <span class="close-modal" onclick="closeDetailModal(event)">&times;</span>
+                    <h2>工具清单</h2>
+                    <div class="detail-item">
+                        <div class="detail-desc">水草剪刀</div>
+                        <div class="detail-desc">镊子</div>
+                        <div class="detail-desc">肥料</div>
+                        <div class="detail-desc">网兜</div>
+                        <div class="detail-desc">擦玻璃用具</div>
+                        <div class="detail-desc">换水用品</div>
+                        <div class="detail-desc">过滤棉</div>
+                        <div class="detail-desc">水质检测设备</div>
+                    </div>
+                `;
+            } else if (type === 'plants') {
+                content.innerHTML = `
+                    <span class="close-modal" onclick="closeDetailModal(event)">&times;</span>
+                    <h2>水草指南</h2>
+                    <p style="text-indent: 0; color: #888; margin-bottom: 20px; text-align: center; font-size: 0.9rem;">以下水草名均使用日常/电商使用名字，专业名字对于普通玩家来说没必要记，只列举常见水草</p>
+                    
+                    <div class="detail-item">
+                        <span class="detail-category">阴性草 <small style="font-weight: normal; font-size: 0.8rem; color: #888;">(无需太多光线就可以长好)</small></span>
+                        <div class="detail-desc"><strong>前景草：</strong>各种莫斯、苔藓、天胡荽、小的水榕</div>
+                        <div class="detail-desc"><strong>中景草：</strong>水罗兰、南美叉柱花、小水兰、各种辣椒榕 (最好看中景草)、各种水蕨 (黑木蕨、青木蕨)、铁皇冠 (细叶铁皇冠、叉叶铁皇冠)、大的水榕</div>
+                        <div class="detail-desc"><strong>后景草：</strong>小宝塔、金鱼草、蜈蚣草、各种水兰、各种绿色水皇冠</div>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-category">阳性草 <small style="font-weight: normal; font-size: 0.8rem; color: #888;">(需要较强光线才能生长/长好的草)</small></span>
+                        <div class="detail-desc"><strong>前景草：</strong>趴地矮珍珠、迷你矮珍珠、迷你牛毛草、汤匙萍（日本真珠草）、狸藻 (挖耳草、禾叶狸藻、长叶狸藻)、南美叉柱花</div>
+                        <div class="detail-desc"><strong>中景草：</strong>微果草、水八角、红头趴趴熊、罗贝力、水罗兰、绝大多数椒草、西瓜对叶、美丽可水皇冠等红色叶片水皇冠、血心兰、北美丁香、各种辣椒榕</div>
+                        <div class="detail-desc"><strong>后景草：</strong><small style="color: #888;">(实在是太多了，只说几个热门且好养的)</small><br>
+                            宫廷 (黄宫廷、红宫廷、紫红宫廷、新加坡红宫廷、尼特利红宫廷、绿宫廷)、蝴蝶 (红蝴蝶、绿蝴蝶、红叶青丝)、丁香、虎耳 (绿虎耳、粉虎耳)、红松尾、小红莓、十字牛顿、红雨伞、丹麦红玫瑰、夕烧、乌苏里聚藻、越南百叶
+                        </div>
+                    </div>
+                `;
+            }
+            
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+        }
+
+        function closeDetailModal(event) {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 400);
+        }
+    </script>
+</body>
+</html>
