@@ -42,7 +42,7 @@
         }
         .content-wrapper {
             width: 90%;
-            max-width: 800px;
+            max-width: 890px; /* 增加宽度以适配底部对齐需求 (800 + 3*30) */
             padding: 20px;
             background-color: #282828;
             margin-bottom: 40px;
@@ -89,38 +89,42 @@
         /* 底部三个平行文本框样式 */
          .bottom-container {
               width: 100%;
-              max-width: 864px; /* 原 960px 缩小 10% 为 864px */
-              margin-top: 30px; /* 与上面文本框间隔30像素 */
+              max-width: 890px; /* 与上面 content-wrapper 的 890px 对齐 */
+              margin-top: 30px; 
               display: flex;
               flex-direction: column;
-              align-items: center; /* 确保子元素在容器中居中 */
-              gap: 15px; /* 改为 15 像素 */
+              align-items: stretch; /* 手机端拉伸以保持宽度一致 */
+              gap: 25px; 
                padding: 0 20px 60px 20px;
            }
            @media (min-width: 768px) {
                .bottom-container {
                    flex-direction: row;
-                   justify-content: center; /* 居中排列 */
+                   justify-content: space-between; 
+                   align-items: stretch;    
                    padding: 0 0 60px 0;
-                   gap: 15px; /* 改为 15 像素 */
+                   gap: 50px; 
                }
            }
           .info-box {
-            width: 100%;
-            max-width: 288px;
+            flex: 1; 
+            min-height: 160px; /* 手机端统一高度 */
             background-color: #282828;
             padding: 25px;
             border-radius: 4px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
             color: #ffffff;
             font-family: SimHei, sans-serif;
             text-align: center;
-            cursor: pointer; /* 增加手型，暗示可点击 */
+            cursor: pointer; 
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
         .info-box:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
         }
 
         /* 详情弹窗样式 */
@@ -257,9 +261,6 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease;
         }
-        .grid-item:hover {
-            transform: scale(1.02);
-        }
         .grid-item img {
             width: 100%;
             height: auto;
@@ -350,61 +351,7 @@
 <body>
     <div id="detail-modal" onclick="closeDetailModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <span class="close-modal" onclick="closeDetailModal(event)">&times;</span>
-            <h2>草缸设备清单 (120x50x50cm)</h2>
-            
-            <div class="detail-item">
-                <span class="detail-category">鱼缸</span>
-                <div class="detail-desc">超白玻璃鱼缸 <span class="detail-price">｜ 450</span></div>
-            </div>
-
-            <div class="detail-item">
-                <span class="detail-category">鱼缸底柜</span>
-                <div class="detail-desc">实木：好看但有变形的风险，小柜子居多 <span class="detail-price">｜ 300</span></div>
-                <div class="detail-desc">板材：稳定耐用，样式丰富内部结构可定制 <span class="detail-price">｜ 500-800</span></div>
-                <div class="detail-desc">合金框架：看起来最扎实的，方便后期走线排管，适合DIY <span class="detail-price">｜ 500</span></div>
-                <div class="detail-desc">玻璃：简约好看但是贵 <span class="detail-price">｜ 大鱼缸没有这个选项哦</span></div>
-            </div>
-
-            <div class="detail-item">
-                <span class="detail-category">水草灯</span>
-                <div class="detail-desc">平板灯：可吊可放置 <span class="detail-price">｜ 900</span></div>
-                <div class="detail-desc">筒灯：只可以吊装 <span class="detail-price">｜ 800×2=1600</span></div>
-            </div>
-
-            <div class="detail-item">
-                <span class="detail-category">二氧化碳设备</span>
-                <div class="detail-desc">反应式钢瓶：小苏打＋柠檬酸，两个月加一次原料 <span class="detail-price">｜ 350</span></div>
-                <div class="detail-desc">建设钢瓶：找气站充气，优先推荐，半年多加一次 <span class="detail-price">｜ 350</span></div>
-                <div class="detail-desc">二氧化碳灭火器：找气站充气，半年多加一次 <span class="detail-price">｜ 200</span></div>
-            </div>
-
-            <div class="detail-item">
-                <span class="detail-category">过滤设备</span>
-                <div class="detail-desc">背滤：适合中小型鱼缸</div>
-                <div class="detail-desc">滴滤：适合有特殊情节的玩家</div>
-                <div class="detail-desc">底滤：过滤效果最好占地最大，草缸完全没必要</div>
-                <div class="detail-desc">滤桶：最主流，最推荐 <span class="detail-price">｜ 750</span></div>
-            </div>
-
-            <div class="detail-item">
-                <span class="detail-category">底床</span>
-                <div class="detail-desc">沙子</div>
-                <div class="detail-desc">水草泥 <span class="detail-price">｜ 200</span></div>
-                <div class="detail-desc">火山石 <span class="detail-price">｜ 100</span></div>
-            </div>
-
-            <div class="detail-item">
-                <span class="detail-category">温度调节设备 <span class="detail-price">｜ 200—500</span></span>
-                <div class="detail-desc">加温器</div>
-                <div class="detail-desc">冷水机</div>
-            </div>
-            
-            <div class="detail-item">
-                <span class="detail-category">造景材料 <span class="detail-price">｜ 200—500</span></span>
-                <div class="detail-desc">石头</div>
-                <div class="detail-desc">木材</div>
-            </div>
+            <!-- 内容由 JS 动态生成 -->
         </div>
     </div>
 
@@ -417,7 +364,9 @@
         </div>
     </div>
     <div class="hero-image-container">
-        <img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEUm2VqFpovrVLrKbdwJ5cUBAcJebHIOwACQCUAAleauVSISvJ2mKXKGzsE.jpg" alt="Planted Tank Hero" class="hero-image">
+        <a href="https://whyr7kvnt9-ops.github.io/AQUA/" target="_blank">
+            <img src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEUm2VqFpovrVLrKbdwJ5cUBAcJebHIOwACQCUAAleauVSISvJ2mKXKGzsE.jpg" alt="Planted Tank Hero" class="hero-image">
+        </a>
     </div>
     <div class="content-wrapper">
         <h1>以水为风，雕琢奇观</h1>
@@ -539,114 +488,70 @@
         }
 
         /* 详情弹窗逻辑 */
+        const modalData = {
+            equipment: {
+                title: "草缸设备清单 (120x50x50cm)",
+                items: [
+                    { category: "鱼缸", desc: "超白玻璃鱼缸 <span class='detail-price'>｜ 450</span>" },
+                    { 
+                        category: "鱼缸底柜", 
+                        desc: "实木：好看但有变形的风险 <span class='detail-price'>｜ 300</span><br>板材：稳定耐用，样式丰富 <span class='detail-price'>｜ 500-800</span><br>合金框架：扎实，方便走线 <span class='detail-price'>｜ 500</span><br>玻璃：简约好看但是贵 <span class='detail-price'>｜ 大鱼缸不推荐</span>" 
+                    },
+                    { category: "水草灯", desc: "平板灯 <span class='detail-price'>｜ 900</span><br>筒灯 <span class='detail-price'>｜ 800×2=1600</span>" },
+                    { category: "二氧化碳设备", desc: "反应式钢瓶 <span class='detail-price'>｜ 350</span><br>建设钢瓶 <span class='detail-price'>｜ 350</span><br>CO2灭火器 <span class='detail-price'>｜ 200</span>" },
+                    { category: "过滤设备", desc: "背滤、滴滤、底滤<br>滤桶：最主流，最推荐 <span class='detail-price'>｜ 750</span>" },
+                    { category: "底床", desc: "沙子、水草泥 <span class='detail-price'>｜ 200</span>、火山石 <span class='detail-price'>｜ 100</span>" },
+                    { category: "温度调节设备", desc: "冷水机 <span class='detail-price'>｜ 1000</span><br>加温设备 <span class='detail-price'>｜ 200</span>" },
+                    { category: "造景材料 <span class='detail-price'>｜ 200—500</span>", desc: "石头、木材" }
+                ]
+            },
+            tools: {
+                title: "工具清单",
+                items: [
+                    { category: "", desc: "水草剪刀、镊子、肥料、网兜、擦玻璃用具、换水用品、过滤棉、水质检测设备" }
+                ]
+            },
+            plants: {
+                title: "水草指南",
+                subtitle: "以下水草名均使用日常/电商使用名字，仅列举常见水草",
+                items: [
+                    { 
+                        category: "阴性草 <small>(需光少)</small>", 
+                        desc: "<strong>前景：</strong>莫斯、苔藓、天胡荽、小水榕<br><strong>中景：</strong>水罗兰、叉柱花、辣椒榕、水蕨、铁皇冠<br><strong>后景：</strong>小宝塔、金鱼草、蜈蚣草、水兰" 
+                    },
+                    { 
+                        category: "阳性草 <small>(需光多)</small>", 
+                        desc: "<strong>前景：</strong>矮珍珠、牛毛草、汤匙萍、狸藻<br><strong>中景：</strong>微果草、水八角、罗贝力、椒草、血心兰<br><strong>后景：</strong>宫廷、蝴蝶、丁香、虎耳、松尾、小红莓" 
+                    }
+                ]
+            }
+        };
+
         function openDetailModal(type) {
             const modal = document.getElementById('detail-modal');
             const content = modal.querySelector('.modal-content');
+            const data = modalData[type];
             
-            // 根据点击类型更新内容
-            if (type === 'equipment') {
-                content.innerHTML = `
-                    <span class="close-modal" onclick="closeDetailModal(event)">&times;</span>
-                    <h2>草缸设备清单 (120x50x50cm)</h2>
-                    
-                    <div class="detail-item">
-                        <span class="detail-category">鱼缸</span>
-                        <div class="detail-desc">超白玻璃鱼缸 <span class="detail-price">｜ 450</span></div>
-                    </div>
-
-                    <div class="detail-item">
-                        <span class="detail-category">鱼缸底柜</span>
-                        <div class="detail-desc">实木：好看但有变形的风险，小柜子居多 <span class="detail-price">｜ 300</span></div>
-                        <div class="detail-desc">板材：稳定耐用，样式丰富内部结构可定制 <span class="detail-price">｜ 500-800</span></div>
-                        <div class="detail-desc">合金框架：看起来最扎实的，方便后期走线排管，适合DIY <span class="detail-price">｜ 500</span></div>
-                        <div class="detail-desc">玻璃：简约好看但是贵 <span class="detail-price">｜ 大鱼缸没有这个选项哦</span></div>
-                    </div>
-
-                    <div class="detail-item">
-                        <span class="detail-category">水草灯</span>
-                        <div class="detail-desc">平板灯：可吊可放置 <span class="detail-price">｜ 900</span></div>
-                        <div class="detail-desc">筒灯：只可以吊装 <span class="detail-price">｜ 800×2=1600</span></div>
-                    </div>
-
-                    <div class="detail-item">
-                        <span class="detail-category">二氧化碳设备</span>
-                        <div class="detail-desc">反应式钢瓶：小苏打＋柠檬酸，两个月加一次原料 <span class="detail-price">｜ 350</span></div>
-                        <div class="detail-desc">建设钢瓶：找气站充气，优先推荐，半年多加一次 <span class="detail-price">｜ 350</span></div>
-                        <div class="detail-desc">二氧化碳灭火器：找气站充气，半年多加一次 <span class="detail-price">｜ 200</span></div>
-                    </div>
-
-                    <div class="detail-item">
-                        <span class="detail-category">过滤设备</span>
-                        <div class="detail-desc">背滤：适合中小型鱼缸</div>
-                        <div class="detail-desc">滴滤：适合有特殊情节的玩家</div>
-                        <div class="detail-desc">底滤：过滤效果最好占地最大，草缸完全没必要</div>
-                        <div class="detail-desc">滤桶：最主流，最推荐 <span class="detail-price">｜ 750</span></div>
-                    </div>
-
-                    <div class="detail-item">
-                        <span class="detail-category">底床</span>
-                        <div class="detail-desc">沙子</div>
-                        <div class="detail-desc">水草泥 <span class="detail-price">｜ 200</span></div>
-                        <div class="detail-desc">火山石 <span class="detail-price">｜ 100</span></div>
-                    </div>
-
-                    <div class="detail-item">
-                        <span class="detail-category">造景材料 <span class="detail-price">｜ 200—500</span></span>
-                        <div class="detail-desc">石头</div>
-                        <div class="detail-desc">木材</div>
-                    </div>
-                `;
-            } else if (type === 'tools') {
-                content.innerHTML = `
-                    <span class="close-modal" onclick="closeDetailModal(event)">&times;</span>
-                    <h2>工具清单</h2>
-                    <div class="detail-item">
-                        <div class="detail-desc">水草剪刀</div>
-                        <div class="detail-desc">镊子</div>
-                        <div class="detail-desc">肥料</div>
-                        <div class="detail-desc">网兜</div>
-                        <div class="detail-desc">擦玻璃用具</div>
-                        <div class="detail-desc">换水用品</div>
-                        <div class="detail-desc">过滤棉</div>
-                        <div class="detail-desc">水质检测设备</div>
-                    </div>
-                `;
-            } else if (type === 'plants') {
-                content.innerHTML = `
-                    <span class="close-modal" onclick="closeDetailModal(event)">&times;</span>
-                    <h2>水草指南</h2>
-                    <p style="text-indent: 0; color: #888; margin-bottom: 20px; text-align: center; font-size: 0.9rem;">以下水草名均使用日常/电商使用名字，专业名字对于普通玩家来说没必要记，只列举常见水草</p>
-                    
-                    <div class="detail-item">
-                        <span class="detail-category">阴性草 <small style="font-weight: normal; font-size: 0.8rem; color: #888;">(无需太多光线就可以长好)</small></span>
-                        <div class="detail-desc"><strong>前景草：</strong>各种莫斯、苔藓、天胡荽、小的水榕</div>
-                        <div class="detail-desc"><strong>中景草：</strong>水罗兰、南美叉柱花、小水兰、各种辣椒榕 (最好看中景草)、各种水蕨 (黑木蕨、青木蕨)、铁皇冠 (细叶铁皇冠、叉叶铁皇冠)、大的水榕</div>
-                        <div class="detail-desc"><strong>后景草：</strong>小宝塔、金鱼草、蜈蚣草、各种水兰、各种绿色水皇冠</div>
-                    </div>
-
-                    <div class="detail-item">
-                        <span class="detail-category">阳性草 <small style="font-weight: normal; font-size: 0.8rem; color: #888;">(需要较强光线才能生长/长好的草)</small></span>
-                        <div class="detail-desc"><strong>前景草：</strong>趴地矮珍珠、迷你矮珍珠、迷你牛毛草、汤匙萍（日本真珠草）、狸藻 (挖耳草、禾叶狸藻、长叶狸藻)、南美叉柱花</div>
-                        <div class="detail-desc"><strong>中景草：</strong>微果草、水八角、红头趴趴熊、罗贝力、水罗兰、绝大多数椒草、西瓜对叶、美丽可水皇冠等红色叶片水皇冠、血心兰、北美丁香、各种辣椒榕</div>
-                        <div class="detail-desc"><strong>后景草：</strong><small style="color: #888;">(实在是太多了，只说几个热门且好养的)</small><br>
-                            宫廷 (黄宫廷、红宫廷、紫红宫廷、新加坡红宫廷、尼特利红宫廷、绿宫廷)、蝴蝶 (红蝴蝶、绿蝴蝶、红叶青丝)、丁香、虎耳 (绿虎耳、粉虎耳)、红松尾、小红莓、十字牛顿、红雨伞、丹麦红玫瑰、夕烧、乌苏里聚藻、越南百叶
-                        </div>
-                    </div>
-                `;
-            }
+            let html = `<span class="close-modal" onclick="closeDetailModal(event)">&times;</span><h2>${data.title}</h2>`;
+            if (data.subtitle) html += `<p style="text-indent: 0; color: #888; margin-bottom: 20px; text-align: center; font-size: 0.9rem;">${data.subtitle}</p>`;
             
+            data.items.forEach(item => {
+                html += `
+                    <div class="detail-item">
+                        ${item.category ? `<span class="detail-category">${item.category}</span>` : ''}
+                        <div class="detail-desc">${item.desc}</div>
+                    </div>`;
+            });
+
+            content.innerHTML = html;
             modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('active');
-            }, 10);
+            setTimeout(() => modal.classList.add('active'), 10);
         }
 
         function closeDetailModal(event) {
             const modal = document.getElementById('detail-modal');
             modal.classList.remove('active');
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 400);
+            setTimeout(() => modal.style.display = 'none', 400);
         }
     </script>
 </body>
