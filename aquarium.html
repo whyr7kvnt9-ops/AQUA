@@ -1,0 +1,2274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>水韵世界 · 探索水族之美</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00d4ff;
+            --secondary: #0099cc;
+            --accent: #00ffcc;
+            --bg-center: #010615;
+            --bg-edge: #091643;
+            --bg-dark: #0a0a12;
+            --bg-darker: #010615;
+            --text-primary: #e8f4f8;
+            --text-secondary: #8ba5b5;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: var(--bg-darker);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        /* Hide custom cursor on touch devices or small screens */
+        @media (hover: none) and (pointer: coarse), (max-width: 768px) {
+            body, a, button, [role="button"], input, select, textarea, .tank-card, .gallery-item, .feature-item, #wheel-number {
+                cursor: auto !important;
+            }
+            #cursor {
+                display: none !important;
+            }
+        }
+
+        a, button, [role="button"], input, select, textarea, .tank-card, .gallery-item, .feature-item, #wheel-number {
+            cursor: none;
+        }
+
+        #cursor {
+            position: fixed;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transition: transform 0.08s ease, background 0.15s ease;
+            mix-blend-mode: difference;
+        }
+
+        #cursor.hover {
+            transform: scale(1.6);
+            background: rgba(0, 212, 255, 0.25);
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: radial-gradient(circle at center, var(--bg-center) 0%, var(--bg-center) 60%, var(--bg-edge) 100%);
+        }
+
+        #constellation-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #ripple-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: none;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        #wheel-counter {
+            position: fixed;
+            left: 30px;
+            top: 50%;
+            height: 600px;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #wheel-canvas {
+            width: 20px;
+            height: 600px;
+        }
+
+        #wheel-number {
+            font-family: 'Courier New', monospace;
+            font-size: 28px;
+            font-weight: bold;
+            color: rgba(140, 180, 200, 0.35);
+            text-shadow: 0 0 5px rgba(0, 212, 255, 0.2);
+            letter-spacing: 2px;
+            min-width: 50px;
+            text-align: right;
+            line-height: 1;
+            padding-top: 20px;
+            transition: color 0.3s, text-shadow 0.3s, opacity 0.3s;
+            user-select: none;
+        }
+
+        #wheel-number:hover {
+            color: rgba(200, 240, 255, 0.8);
+            text-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+        }
+
+        .digit-roll {
+            display: inline-block;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .digit-roll.animating {
+            animation: rollUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes rollUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            51% {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes milestoneGlow {
+            0%, 100% {
+                text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+                transform: scale(1);
+            }
+            50% {
+                text-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+                transform: scale(1.05);
+            }
+        }
+
+        #wheel-number.milestone {
+            animation: milestoneGlow 1.2s ease-in-out infinite;
+        }
+
+        #wheel-number.annihilating {
+            animation: annihilate 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        #wheel-number.reappearing {
+            animation: reappear 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes annihilate {
+            0% {
+                transform: scaleY(1);
+                filter: brightness(1);
+                clip-path: inset(0 0 0 0);
+            }
+            40% {
+                transform: scaleY(0.05);
+                filter: brightness(5) drop-shadow(0 0 15px white);
+                opacity: 1;
+                clip-path: inset(0 0 0 0);
+            }
+            100% {
+                transform: scaleY(0.05);
+                filter: brightness(10);
+                opacity: 0;
+                clip-path: inset(0 0 0 100%);
+            }
+        }
+
+        @keyframes reappear {
+            0% {
+                transform: scaleY(0.05);
+                filter: brightness(10);
+                opacity: 0;
+                clip-path: inset(0 100% 0 0);
+            }
+            60% {
+                transform: scaleY(0.05);
+                filter: brightness(5);
+                opacity: 1;
+                clip-path: inset(0 0 0 0);
+            }
+            100% {
+                transform: scaleY(1);
+                filter: brightness(1);
+                clip-path: inset(0 0 0 0);
+            }
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .hero-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(3rem, 10vw, 7rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.1em;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5));
+            }
+            50% {
+                filter: drop-shadow(0 0 40px rgba(0, 255, 204, 0.7));
+            }
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: var(--text-secondary);
+            margin-top: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            opacity: 0;
+            animation: fadeInUp 1s ease forwards 0.5s;
+        }
+
+        .hero-description {
+            max-width: 800px;
+            margin: 2rem auto;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            opacity: 0;
+            animation: fadeInUp 1s ease forwards 0.8s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-indicator span {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.2em;
+        }
+
+        .scroll-indicator .arrow {
+            width: 30px;
+            height: 30px;
+            border-right: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+            transform: rotate(45deg);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: linear-gradient(to bottom, rgba(10, 10, 18, 0.9), transparent);
+            transition: all 0.3s ease;
+        }
+
+        .nav.scrolled {
+            background: rgba(10, 10, 18, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 3rem;
+        }
+
+        .nav-logo {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo:hover {
+            text-shadow: 0 0 20px var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Sections */
+        section {
+            min-height: 100vh;
+            padding: 6rem 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .section-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            text-align: center;
+            letter-spacing: 0.2em;
+            margin-bottom: 4rem;
+        }
+
+        /* Tank Cards */
+        .tank-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            max-width: 1400px;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
+        .tank-card {
+            position: relative;
+            background: linear-gradient(145deg, rgba(20, 25, 35, 0.8), rgba(10, 15, 25, 0.9));
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .tank-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tank-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5),
+                        0 0 60px rgba(0, 212, 255, 0.1);
+        }
+
+        .tank-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tank-card:hover::before {
+            opacity: 1;
+        }
+
+        .tank-image {
+            width: 100%;
+            height: 250px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tank-image::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to top, rgba(10, 10, 18, 1), transparent);
+        }
+
+        .tank-card:nth-child(1) .tank-image {
+            background: linear-gradient(135deg, #1a3a2a 0%, #0d1f18 100%);
+        }
+
+        .tank-card:nth-child(2) .tank-image {
+            background: linear-gradient(135deg, #2a2a3a 0%, #15151f 100%);
+        }
+
+        .tank-card:nth-child(3) .tank-image {
+            background: linear-gradient(135deg, #1a2a3a 0%, #0f1a25 100%);
+        }
+
+        .tank-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            opacity: 0.3;
+            transition: all 0.5s ease;
+        }
+
+        .tank-card:hover .tank-icon {
+            opacity: 0.6;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .tank-content {
+            padding: 2rem;
+        }
+
+        .tank-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .tank-title-en {
+            font-size: 0.85rem;
+            color: var(--primary);
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .tank-desc {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .tank-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tank-feature {
+            padding: 0.4rem 1rem;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .tank-card:hover .tank-feature {
+            background: rgba(0, 212, 255, 0.2);
+            border-color: rgba(0, 212, 255, 0.4);
+        }
+
+        /* Features Section */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 2.5rem;
+            background: linear-gradient(145deg, rgba(20, 25, 35, 0.6), rgba(10, 15, 25, 0.7));
+            border-radius: 15px;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            transition: all 0.4s ease;
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        .feature-item.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .feature-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .feature-desc {
+            font-size: 0.9rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        /* Gallery Section */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .gallery-item {
+            position: relative;
+            height: 250px;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.03);
+            z-index: 10;
+        }
+
+        .gallery-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(10, 10, 18, 0.8), transparent);
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover::before {
+            opacity: 1;
+        }
+
+        .gallery-overlay {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .gallery-overlay h4 {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .gallery-overlay span {
+            font-size: 0.85rem;
+            color: var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 2rem;
+            text-align: center;
+            background: linear-gradient(to top, var(--bg-darker), transparent);
+            position: relative;
+            z-index: 10;
+        }
+
+        footer p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                padding: 1rem 1.5rem;
+            }
+
+            .nav-toggle {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                cursor: pointer;
+                z-index: 1001;
+            }
+
+            .nav-toggle span {
+                width: 25px;
+                height: 2px;
+                background: var(--primary);
+                transition: all 0.3s ease;
+            }
+
+            .nav-toggle.active span:nth-child(1) {
+                transform: rotate(45deg) translate(5px, 5px);
+            }
+
+            .nav-toggle.active span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .nav-toggle.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(5px, -5px);
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 70%;
+                height: 100vh;
+                background: rgba(10, 10, 18, 0.95);
+                backdrop-filter: blur(15px);
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 2rem;
+                transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+                display: flex; /* Show as flex when active */
+                z-index: 1000;
+            }
+
+            .nav-links.active {
+                right: 0;
+            }
+
+            .nav-links a {
+                font-size: 1.2rem;
+            }
+
+            #wheel-counter {
+                left: 10px;
+                gap: 5px;
+                flex-direction: column;
+                justify-content: center;
+                height: auto;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+            #wheel-canvas {
+                width: 12px;
+                height: 200px;
+                flex: 0 0 auto;
+            }
+
+            #wheel-number {
+                font-size: 16px;
+                min-width: auto;
+                padding-top: 0;
+                text-align: center;
+                letter-spacing: 1px;
+            }
+
+            .tank-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .tank-card {
+                max-width: 100%;
+            }
+
+            .hero-title {
+                font-size: 3.5rem;
+            }
+
+            .hero-subtitle {
+                letter-spacing: 0.15em;
+                font-size: 1rem;
+            }
+
+            .hero-description {
+                font-size: 0.95rem;
+                padding: 0 1rem;
+            }
+
+            section {
+                padding: 4rem 1rem;
+            }
+
+            .section-title {
+                font-size: 2.2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+
+            .gallery-item {
+                height: 180px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero-title {
+                font-size: 2.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="cursor"></div>
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="constellation-canvas"></canvas>
+    <canvas id="ripple-canvas"></canvas>
+
+    <div id="wheel-counter">
+        <canvas id="wheel-canvas" width="24" height="600"></canvas>
+        <div id="wheel-number"><span class="digit-roll">0</span><span class="digit-roll">0</span><span class="digit-roll">0</span></div>
+    </div>
+
+    <div class="overlay"></div>
+    <div class="vignette"></div>
+    
+    <nav class="nav" id="nav">
+        <a href="#" class="nav-logo">水韵世界</a>
+        <div class="nav-toggle" id="nav-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#aquascape">草缸</a></li>
+            <li><a href="#native">原生缸</a></li>
+            <li><a href="#aquarium">鱼缸</a></li>
+            <li><a href="#features">特色</a></li>
+            <li><a href="#gallery">画廊</a></li>
+        </ul>
+    </nav>
+
+    <div class="content">
+        <section class="hero">
+            <h1 class="hero-title">水韵世界</h1>
+            <p class="hero-subtitle">探索水族之美 · 感受自然之韵</p>
+            <p class="hero-description">
+                在繁忙的都市生活中，一方清澈的水世界能带来无尽的宁静与美好。
+                无论是精心打造的草缸景观，还是回归自然的原生缸，
+                亦或是生机盎然的传统鱼缸，每一滴水都承载着生命的律动。
+            </p>
+            <div class="scroll-indicator">
+                <span>探索更多</span>
+                <div class="arrow"></div>
+            </div>
+        </section>
+
+        <section id="aquascape">
+            <h2 class="section-title">草缸艺术</h2>
+            <p class="section-subtitle">AQUASCAPE · 水中画卷</p>
+            <div class="tank-container">
+                <div class="tank-card" data-delay="0">
+                    <div class="tank-image">
+                        <span class="tank-icon">🌿</span>
+                    </div>
+                    <div class="tank-content">
+                        <h3 class="tank-title">荷兰式草缸</h3>
+                        <span class="tank-title-en">Dutch Style</span>
+                        <p class="tank-desc">
+                            以绚丽的水草品种和精湛的布局技艺著称，注重水草的色彩搭配与层次感，
+                            仿佛水下的彩色森林，每一株水草都是大自然的杰作。
+                        </p>
+                        <div class="tank-features">
+                            <span class="tank-feature">层次分明</span>
+                            <span class="tank-feature">色彩丰富</span>
+                            <span class="tank-feature">技术流</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tank-card" data-delay="100">
+                    <div class="tank-image">
+                        <span class="tank-icon">🏔️</span>
+                    </div>
+                    <div class="tank-content">
+                        <h3 class="tank-title">ADA风格造景</h3>
+                        <span class="tank-title-en">ADA Style</span>
+                        <p class="tank-desc">
+                            遵循自然法则，以石木为骨，水草为肉，营造出气势磅礴的山水意境。
+                            每一处细节都经过精心设计，展现水下世界的壮美与灵动。
+                        </p>
+                        <div class="tank-features">
+                            <span class="tank-feature">自然法则</span>
+                            <span class="tank-feature">意境深远</span>
+                            <span class="tank-feature">经典</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tank-card" data-delay="200">
+                    <div class="tank-image">
+                        <span class="tank-icon">🌍</span>
+                    </div>
+                    <div class="tank-content">
+                        <h3 class="tank-title">南美原生缸</h3>
+                        <span class="tank-title-en">South American Biotope</span>
+                        <p class="tank-desc">
+                            模拟南美热带雨林的水域环境，以沉木、落叶为基调，
+                            搭配艳丽的灯鱼和慈鲷，呈现最纯粹的自然风貌。
+                        </p>
+                        <div class="tank-features">
+                            <span class="tank-feature">原生境</span>
+                            <span class="tank-feature">生态</span>
+                            <span class="tank-feature">和谐</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="native">
+            <h2 class="section-title">原生缸</h2>
+            <p class="section-subtitle">NATIVE AQUARIUM · 回归自然</p>
+            <div class="tank-container">
+                <div class="tank-card" data-delay="0">
+                    <div class="tank-image">
+                        <span class="tank-icon">🐟</span>
+                    </div>
+                    <div class="tank-content">
+                        <h3 class="tank-title">中国原生鱼缸</h3>
+                        <span class="tank-title-en">Chinese Native</span>
+                        <p class="tank-desc">
+                            以中国本土原生鱼类为主题，如鳜鱼、鳢鱼、虾虎等，
+                            搭配本土水草和素材，展现中华水系的独特魅力。
+                        </p>
+                        <div class="tank-features">
+                            <span class="tank-feature">本土物种</span>
+                            <span class="tank-feature">文化</span>
+                            <span class="tank-feature">独特</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tank-card" data-delay="100">
+                    <div class="tank-image">
+                        <span class="tank-icon">🏞️</span>
+                    </div>
+                    <div class="tank-content">
+                        <h3 class="tank-title">山溪风格</h3>
+                        <span class="tank-title-en">Stream Style</span>
+                        <p class="tank-desc">
+                            模拟高山溪流环境，选用溪流石、砂砾为底，
+                            搭配苦草、菹草等水生植物，营造清凉的高山流水意境。
+                        </p>
+                        <div class="tank-features">
+                            <span class="tank-feature">清凉</span>
+                            <span class="tank-feature">自然</span>
+                            <span class="tank-feature">灵动</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tank-card" data-delay="200">
+                    <div class="tank-image">
+                        <span class="tank-icon">🍂</span>
+                    </div>
+                    <div class="tank-content">
+                        <h3 class="tank-title">落叶季节缸</h3>
+                        <span class="tank-title-en">Leaf Litter Tank</span>
+                        <p class="tank-desc">
+                            以枯叶、落枝为主要装饰，配合腐植酸营造弱酸性水质，
+                            吸引各类小型灯鱼和观赏虾，打造自然的溪畔景象。
+                        </p>
+                        <div class="tank-features">
+                            <span class="tank-feature">季节感</span>
+                            <span class="tank-feature">原生</span>
+                            <span class="tank-feature">野趣</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="aquarium">
+            <h2 class="section-title">传统鱼缸</h2>
+            <p class="section-subtitle">AQUARIUM · 生机盎然</p>
+            <div class="tank-container">
+                <div class="tank-card" data-delay="0">
+                    <div class="tank-image">
+                        <span class="tank-icon">🐠</span>
+                    </div>
+                    <div class="tank-content">
+                        <h3 class="tank-title">海水缸</h3>
+                        <span class="tank-title-en">Marine Aquarium</span>
+                        <p class="tank-desc">
+                            探索神秘的热带珊瑚礁世界，与绚丽的海水鱼和优雅的珊瑚共舞。
+                            每一缸都是独一无二的海底花园，让人沉醉于蓝色梦境。
+                        </p>
+                        <div class="tank-features">
+                            <span class="tank-feature">珊瑚</span>
+                            <span class="tank-feature">海水鱼</span>
+                            <span class="tank-feature">梦幻</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tank-card" data-delay="100">
+                    <div class="tank-image">
+                        <span class="tank-icon">🦈</span>
+                    </div>
+                    <div class="tank-content">
+                        <h3 class="tank-title">大型鱼缸</h3>
+                        <span class="tank-title-en">Large Fish Tank</span>
+                        <p class="tank-desc">
+                            饲养龙鱼、魟鱼、罗汉等大型观赏鱼，
+                            搭配精致的过滤系统和合理的造景，展现水中霸主的非凡气势。
+                        </p>
+                        <div class="tank-features">
+                            <span class="tank-feature">霸气</span>
+                            <span class="tank-feature">大型鱼</span>
+                            <span class="tank-feature">震撼</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="tank-card" data-delay="200">
+                    <div class="tank-image">
+                        <span class="tank-icon">🦐</span>
+                    </div>
+                    <div class="tank-content">
+                        <h3 class="tank-title">水晶虾缸</h3>
+                        <span class="tank-title-en">Crystal Shrimp Tank</span>
+                        <p class="tank-desc">
+                            以精致美丽的水晶虾为主角，搭配莫斯和小型水草，
+                            营造出精致细腻的水下微观世界，每一处都充满惊喜。
+                        </p>
+                        <div class="tank-features">
+                            <span class="tank-feature">精致</span>
+                            <span class="tank-feature">萌系</span>
+                            <span class="tank-feature">细腻</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features">
+            <h2 class="section-title">水族魅力</h2>
+            <p class="section-subtitle">THE CHARM OF AQUARIUM</p>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <span class="feature-icon">💧</span>
+                    <h3 class="feature-title">生态循环</h3>
+                    <p class="feature-desc">
+                        完善的水族生态系统展示了自然界水循环的精妙，
+                        硝化细菌、微生物与动植物共同构建起清澈健康的水质环境。
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🌡️</span>
+                    <h3 class="feature-title">温度控制</h3>
+                    <p class="feature-desc">
+                        精确的温控系统模拟热带水域的温度环境，
+                        让娇贵的观赏鱼和热带水草能够在人工环境中繁衍生息。
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">💡</span>
+                    <h3 class="feature-title">光照艺术</h3>
+                    <p class="feature-desc">
+                        专业的水族照明不仅满足水草光合作用需求，
+                        更通过精心的光谱配比营造出梦幻般的水下光影效果。
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🔬</span>
+                    <h3 class="feature-title">水质管理</h3>
+                    <p class="feature-desc">
+                        从PH值到GH、KH再到氨氮亚盐，每一项水质参数都至关重要，
+                        掌握水质管理是成为合格水族爱好者的必经之路。
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🎨</span>
+                    <h3 class="feature-title">造景美学</h3>
+                    <p class="feature-desc">
+                        水族造景融合了中国山水画的意境与西方园林艺术的精致，
+                        在有限的空间里创造出无限的水下美景。
+                    </p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🧬</span>
+                    <h3 class="feature-title">生物多样性</h3>
+                    <p class="feature-desc">
+                        从微小的硝化细菌到优雅的观赏鱼，从翠绿的水草到五彩的珊瑚，
+                        水族世界展现了生命的多样与精彩。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="gallery">
+            <h2 class="section-title">精彩画廊</h2>
+            <p class="section-subtitle">GALLERY · 灵感源泉</p>
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a3a2a,#0d1f18);display:flex;align-items:center;justify-content:center;font-size:4rem;">🌿</div>
+                    <div class="gallery-overlay">
+                        <h4>绿野仙踪</h4>
+                        <span>草缸作品</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#2a2a3a,#15151f);display:flex;align-items:center;justify-content:center;font-size:4rem;">🏔️</div>
+                    <div class="gallery-overlay">
+                        <h4>山水之间</h4>
+                        <span>ADA造景</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a2a3a,#0f1a25);display:flex;align-items:center;justify-content:center;font-size:4rem;">🐠</div>
+                    <div class="gallery-overlay">
+                        <h4>蔚蓝深海</h4>
+                        <span>海水缸</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#3a2a2a,#1f1515);display:flex;align-items:center;justify-content:center;font-size:4rem;">🍂</div>
+                    <div class="gallery-overlay">
+                        <h4>秋日私语</h4>
+                        <span>原生缸</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#2a3a2a,#151f15);display:flex;align-items:center;justify-content:center;font-size:4rem;">🦐</div>
+                    <div class="gallery-overlay">
+                        <h4>水晶世界</h4>
+                        <span>虾缸</span>
+                    </div>
+                </div>
+                <div class="gallery-item">
+                    <div style="width:100%;height:100%;background:linear-gradient(135deg,#3a3a2a,#1f1f15);display:flex;align-items:center;justify-content:center;font-size:4rem;">🐟</div>
+                    <div class="gallery-overlay">
+                        <h4>鱼翔浅底</h4>
+                        <span>原生鱼</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>水韵世界 · 探索水族之美 · 2026</p>
+        </footer>
+    </div>
+
+    <script>
+        // Check if touch device
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // Custom Cursor
+        const cursor = document.getElementById('cursor');
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+
+        if (!isTouchDevice) {
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            function animateCursor() {
+                cursorX += (mouseX - cursorX) * 0.4;
+                cursorY += (mouseY - cursorY) * 0.4;
+                cursor.style.left = cursorX - 8 + 'px';
+                cursor.style.top = cursorY - 8 + 'px';
+                requestAnimationFrame(animateCursor);
+            }
+            animateCursor();
+
+            // Cursor hover effect
+            const interactiveElements = document.querySelectorAll('a, button, .tank-card, .gallery-item, .feature-item');
+            interactiveElements.forEach(el => {
+                el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+                el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+            });
+        }
+
+        // Mobile Navigation Toggle
+        const navToggle = document.getElementById('nav-toggle');
+        const navLinks = document.querySelector('.nav-links');
+        const navLinksItems = document.querySelectorAll('.nav-links a');
+
+        navToggle.addEventListener('click', () => {
+            navToggle.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+
+        navLinksItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navToggle.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Background Canvas - Animated water effect
+        const bgCanvas = document.getElementById('bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        const constellationCanvas = document.getElementById('constellation-canvas');
+        const constellationCtx = constellationCanvas.getContext('2d');
+
+        function resizeBgCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+            constellationCanvas.width = window.innerWidth;
+            constellationCanvas.height = window.innerHeight;
+        }
+        resizeBgCanvas();
+        window.addEventListener('resize', resizeBgCanvas);
+
+        // Constellation Data
+        const CONSTELLATIONS = [
+            {
+                name: "Aries", // 白羊座
+                points: [
+                    [0.232, 0.876], [0.304, 0.724], [0.192, 0.492], [0.684, 0.228],
+                    [0.776, 0.160], [0.872, 0.192], [0.848, 0.300], [0.888, 0.364]
+                ],
+                lines: [
+                    [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [3, 6], [6, 7]
+                ]
+            },
+            {
+                name: "Taurus", // 金牛座
+                points: [
+                    [0.188, 0.118], [0.324, 0.300], [0.466, 0.494], [0.450, 0.584], 
+                    [0.610, 0.660], [0.806, 0.768], [0.834, 0.860], [0.580, 0.756], 
+                    [0.684, 0.818], [0.312, 0.568], [0.100, 0.394]
+                ],
+                lines: [
+                    [0, 1], [1, 2], [2, 3], [10, 9], [9, 3], 
+                    [3, 4], [4, 5], [5, 6], [4, 7], [7, 8]
+                ]
+            },
+            {
+                name: "Gemini", // 双子座
+                points: [
+                    [0.160, 0.322], [0.210, 0.544], [0.244, 0.430], [0.280, 0.226],
+                    [0.342, 0.376], [0.344, 0.556], [0.380, 0.722], [0.416, 0.262],
+                    [0.474, 0.136], [0.480, 0.822], [0.506, 0.656], [0.566, 0.846],
+                    [0.610, 0.480], [0.676, 0.806], [0.714, 0.610], [0.822, 0.600]
+                ],
+                lines: [
+                    [3, 7], [7, 8], [7, 4], [4, 2], [0, 2], [2, 1],
+                    [2, 5], [5, 6], [6, 9], [5, 10], [10, 11],
+                    [7, 12], [12, 13], [12, 14], [14, 15]
+                ]
+            },
+            {
+                name: "Cancer", // 巨蟹座
+                points: [
+                    [0.126, 0.366], [0.240, 0.330], [0.442, 0.158], [0.520, 0.490], [0.578, 0.682], [0.864, 0.848]
+                ],
+                lines: [
+                    [0, 1], [1, 3], [2, 3], [3, 4], [4, 5]
+                ]
+            },
+            {
+                name: "Leo", // 狮子座
+                points: [
+                    [0.086, 0.840], [0.160, 0.766], [0.362, 0.846], [0.464, 0.304], [0.530, 0.248], 
+                    [0.542, 0.412], [0.614, 0.294], [0.658, 0.434], [0.742, 0.582], [0.884, 0.626]
+                ],
+                lines: [
+                    [0, 1], [1, 2], [2, 8], [3, 4], [4, 6], [3, 5], [5, 7], [7, 8], [8, 9]
+                ]
+            },
+            {
+                name: "Virgo", // 处女座
+                points: [
+                    [0.038, 0.646], [0.224, 0.888], [0.282, 0.722], [0.400, 0.816],
+                    [0.632, 0.542], [0.638, 0.408], [0.684, 0.168], [0.836, 0.464], [0.926, 0.344]
+                ],
+                lines: [
+                    [0, 2], [2, 3], [3, 4], [1, 3], [4, 5], [5, 6], [4, 7], [7, 8]
+                ]
+            },
+            {
+                name: "Libra", // 天秤座
+                points: [
+                    [0.142, 0.694], [0.330, 0.606], [0.502, 0.846], [0.620, 0.792],
+                    [0.626, 0.202], [0.752, 0.144], [0.844, 0.448]
+                ],
+                lines: [
+                    [0, 1], [1, 4], [4, 5], [5, 6], [6, 3], [3, 2]
+                ]
+            },
+            {
+                name: "Scorpio", // 天蝎座
+                points: [
+                    [0.124, 0.492], [0.146, 0.754], [0.240, 0.650], [0.262, 0.860],
+                    [0.364, 0.462], [0.394, 0.844], [0.516, 0.770], [0.584, 0.550],
+                    [0.604, 0.412], [0.714, 0.250], [0.774, 0.496], [0.794, 0.122],
+                    [0.844, 0.406], [0.874, 0.224]
+                ],
+                lines: [
+                    [0, 2], [2, 4], [1, 2], [1, 3], [3, 5], [5, 6], [6, 8], [8, 9], [9, 11], [11, 13], [13, 12], [12, 10], [12, 9]
+                ]
+            },
+            {
+                name: "Sagittarius", // 射手座
+                points: [
+                    [0.130, 0.710], [0.152, 0.508], [0.210, 0.740], [0.236, 0.886],
+                    [0.426, 0.352], [0.470, 0.448], [0.484, 0.096], [0.524, 0.174],
+                    [0.546, 0.304], [0.614, 0.204], [0.626, 0.390], [0.682, 0.614],
+                    [0.704, 0.734], [0.716, 0.496], [0.810, 0.544], [0.864, 0.330]
+                ],
+                lines: [
+                    [0, 1], [1, 4], [4, 8], [8, 7], [7, 6], [7, 9], [9, 8],
+                    [2, 3], [2, 5], [5, 4], [10, 5], [11, 13], [13, 10],
+                    [11, 12], [14, 12], [14, 15], [10, 8]
+                ]
+            },
+            {
+                name: "Capricorn", // 摩羯座
+                points: [
+                    [0.124, 0.430], [0.222, 0.488], [0.234, 0.642], [0.476, 0.498],
+                    [0.664, 0.790], [0.732, 0.692], [0.742, 0.384], [0.766, 0.246], [0.770, 0.096]
+                ],
+                lines: [
+                    [0, 1], [1, 3], [3, 7], [7, 8], [0, 2], [2, 4], [4, 5], [5, 6], [6, 7]
+                ]
+            },
+            {
+                name: "Aquarius", // 水瓶座
+                points: [
+                    [0.152, 0.484], [0.186, 0.672], [0.204, 0.584], [0.326, 0.274],
+                    [0.422, 0.516], [0.440, 0.096], [0.494, 0.864], [0.534, 0.762],
+                    [0.564, 0.446], [0.644, 0.726], [0.866, 0.796]
+                ],
+                lines: [
+                    [5, 3], [3, 0], [0, 2], [2, 1], [1, 6], [0, 4], [4, 8], [6, 7], [7, 9], [9, 10]
+                ]
+            },
+            {
+                name: "Pisces", // 双鱼座
+                points: [
+                    [0.136, 0.470], [0.202, 0.490], [0.214, 0.392], [0.320, 0.764],
+                    [0.410, 0.830], [0.512, 0.734], [0.560, 0.632], [0.626, 0.572],
+                    [0.702, 0.386], [0.766, 0.340], [0.768, 0.262], [0.836, 0.220],
+                    [0.842, 0.342], [0.884, 0.274], [0.890, 0.126]
+                ],
+                lines: [
+                    [0, 1], [1, 2], [1, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9],
+                    [9, 10], [10, 11], [11, 13], [13, 12], [12, 9], [11, 14]
+                ]
+            }
+        ];
+
+        class ConstellationManager {
+            constructor() {
+                this.currentIndex = -1;
+                this.currentConstellation = null;
+                this.oldConstellation = null;
+                this.fadeOpacity = 0;
+                this.transitioning = false;
+            }
+
+            triggerNext() {
+                if (this.currentConstellation) {
+                    this.oldConstellation = this.currentConstellation;
+                    this.oldConstellation.isFadingOut = true;
+                }
+                
+                this.currentIndex = (this.currentIndex + 1) % CONSTELLATIONS.length;
+                const data = CONSTELLATIONS[this.currentIndex];
+                this.currentConstellation = new Constellation(data);
+            }
+
+            update(time) {
+                if (this.currentConstellation) {
+                    this.currentConstellation.update(time);
+                }
+                if (this.oldConstellation) {
+                    this.oldConstellation.update(time);
+                    if (this.oldConstellation.opacity <= 0) {
+                        this.oldConstellation = null;
+                    }
+                }
+            }
+
+            draw() {
+                constellationCtx.clearRect(0, 0, constellationCanvas.width, constellationCanvas.height);
+                if (this.oldConstellation) {
+                    this.oldConstellation.draw();
+                }
+                if (this.currentConstellation) {
+                    this.currentConstellation.draw();
+                }
+            }
+        }
+
+        class Constellation {
+            constructor(data) {
+                this.data = data;
+                this.opacity = 0;
+                this.targetOpacity = 1;
+                
+                // Scale X by 0.85 and center horizontally
+                const scaleX = 0.85;
+                const offsetX = (1 - scaleX) / 2;
+                
+                this.points = data.points.map(p => ({
+                    x: (p[0] * scaleX + offsetX) * constellationCanvas.width,
+                    y: p[1] * constellationCanvas.height,
+                    flashOffset: Math.random() * Math.PI * 2,
+                    flashSpeed: 2 + Math.random() * 2, // Speed of twinkling
+                    sizeBase: 2.25 + Math.random() * 2.25 // Random base size (increased by 50%)
+                }));
+                this.lineProgress = 0;
+                this.isFadingOut = false;
+                this.createTime = performance.now();
+                this.completionTime = null; // Time when all lines finished drawing
+                this.glowOpacity = 0;
+            }
+
+            update(time) {
+                const now = performance.now();
+                const age = now - this.createTime;
+
+                // Fade in or out
+                if (this.isFadingOut) {
+                    this.opacity = Math.max(0, this.opacity - 0.02);
+                } else {
+                    this.opacity = Math.min(1, this.opacity + 0.02);
+                }
+
+                // Line connection animation (starts after 500ms, takes 2s)
+                if (age > 500) {
+                    const prevProgress = this.lineProgress;
+                    this.lineProgress = Math.min(1, (age - 500) / 2000);
+                    
+                    if (this.lineProgress === 1 && prevProgress < 1) {
+                        this.completionTime = now;
+                    }
+                }
+
+                // Glow and Color dynamics
+                if (this.lineProgress < 1) {
+                    this.glowOpacity = 1;
+                    this.lineColor = { r: 255, g: 255, b: 255 };
+                } else if (this.completionTime) {
+                    const elapsedSinceCompletion = now - this.completionTime;
+                    if (elapsedSinceCompletion < 1000) {
+                        // Stay bright for 1 second
+                        this.glowOpacity = 1;
+                        this.lineColor = { r: 255, g: 255, b: 255 };
+                    } else if (elapsedSinceCompletion < 3000) {
+                        // Fade over 2 seconds
+                        const fadeProgress = (elapsedSinceCompletion - 1000) / 2000;
+                        this.glowOpacity = 1 - fadeProgress;
+                        // Color from #ffffff to #b4b4b4 (255,255,255 -> 180,180,180)
+                        const colorVal = 255 - (255 - 180) * fadeProgress;
+                        this.lineColor = { r: colorVal, g: colorVal, b: colorVal };
+                    } else {
+                        this.glowOpacity = 0;
+                        this.lineColor = { r: 180, g: 180, b: 180 };
+                    }
+                }
+            }
+
+            draw() {
+                if (this.opacity <= 0) return;
+
+                const ctx = constellationCtx;
+                const points = this.points;
+                const lines = this.data.lines;
+                const time = performance.now() * 0.001;
+
+                // Draw lines
+                const totalLines = lines.length;
+                const linesToShow = totalLines * this.lineProgress;
+
+                lines.forEach((line, index) => {
+                    if (index >= linesToShow) return;
+
+                    const p1 = points[line[0]];
+                    const p2 = points[line[1]];
+                    
+                    let baseOpacity = this.opacity * 0.4;
+                    let endX = p2.x;
+                    let endY = p2.y;
+                    let isDrawing = false;
+                    
+                    if (index > linesToShow - 1) {
+                        const segmentProgress = linesToShow - index;
+                        endX = p1.x + (p2.x - p1.x) * segmentProgress;
+                        endY = p1.y + (p2.y - p1.y) * segmentProgress;
+                        baseOpacity *= segmentProgress;
+                        isDrawing = true;
+                    }
+
+                    // Draw glow
+                    if (this.glowOpacity > 0 || isDrawing) {
+                        ctx.shadowBlur = (isDrawing ? 25 : 18) * this.glowOpacity;
+                        ctx.shadowColor = `rgba(255, 255, 255, ${isDrawing ? this.opacity : this.glowOpacity * this.opacity})`;
+                    } else {
+                        ctx.shadowBlur = 0;
+                    }
+
+                    ctx.lineWidth = isDrawing ? 2.2 : 1.5;
+                    const r = Math.floor(this.lineColor.r);
+                    const g = Math.floor(this.lineColor.g);
+                    const b = Math.floor(this.lineColor.b);
+                    ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${baseOpacity * 1.5})`;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                    
+                    // Reset shadow for next drawings
+                    ctx.shadowBlur = 0;
+                });
+
+                // Draw points
+                points.forEach(p => {
+                    // Enhanced twinkling: modulated by sine wave
+                    const twinkle = Math.sin(time * p.flashSpeed + p.flashOffset);
+                    const intensity = (twinkle + 1) * 0.5; // 0 to 1
+                    
+                    // Size varies: 忽大忽小
+                    const currentSize = p.sizeBase * (0.8 + intensity * 0.7);
+                    
+                    // Brightness/Opacity varies: 忽明忽暗
+                    const pointOpacity = this.opacity * (0.5 + intensity * 0.5);
+                    
+                    // Point color: #59bbe2 base, #ffffff flash at peak
+                    const color = `rgba(${Math.floor(89 + (255-89)*intensity)}, ${Math.floor(187 + (255-187)*intensity)}, ${Math.floor(226 + (255-226)*intensity)}, ${pointOpacity})`;
+
+                    // Glow for points
+                    const glowRadius = currentSize * 4;
+                    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowRadius);
+                    gradient.addColorStop(0, `rgba(255, 255, 255, ${pointOpacity * 0.5})`);
+                    gradient.addColorStop(0.3, `rgba(89, 187, 226, ${pointOpacity * 0.3})`);
+                    gradient.addColorStop(1, 'transparent');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, glowRadius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, currentSize, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+        }
+
+        const constellationManager = new ConstellationManager();
+
+        class ExplosionParticle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 1.5 + 0.3;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.size = Math.random() * 2 + 0.5;
+                this.life = 1;
+                this.decay = Math.random() * 0.015 + 0.008;
+                this.baseHue = Math.random() * 60 + 180;
+                this.hue = this.baseHue;
+                this.saturation = Math.random() > 0.5 ? 100 : 30;
+                this.brightness = Math.random() > 0.5 ? 100 : 60;
+                this.twinkleSpeed = Math.random() * 0.3 + 0.1;
+                this.twinkleOffset = Math.random() * Math.PI * 2;
+                this.hasExploded = false;
+                this.fadeDelay = 0;
+                this.flashHue = 190 + Math.random() * 60; // Wide range of blues (190 to 250)
+                this.flashSpeed = Math.random() * 0.12 + 0.04;
+                this.flashSizeMult = Math.random() * 1.5 + 0.5; // Random size multiplier for flash
+                this.flashChance = Math.random(); // Used to randomize quantity
+            }
+
+            update(time) {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.96;
+                this.vy *= 0.96;
+
+                if (this.hasExploded) {
+                    this.life -= this.decay;
+                    this.size *= 0.98;
+                } else {
+                    this.fadeDelay++;
+                    if (this.fadeDelay > 30) {
+                        this.hasExploded = true;
+                    }
+                }
+
+                const twinkle = Math.sin(time * this.twinkleSpeed + this.twinkleOffset);
+                this.currentSaturation = this.saturation + twinkle * 30;
+                this.currentBrightness = this.brightness + twinkle * 20;
+            }
+
+            draw(milestoneIntensity) {
+                let drawHue = this.hue;
+                let drawSaturation = this.currentSaturation;
+                let drawBrightness = this.currentBrightness;
+                let drawSizeMult = 1.0;
+
+                if (milestoneIntensity > 0 && this.flashChance < 0.45) {
+                    const flashCycle = Math.sin(time * this.flashSpeed + this.x * 0.05 + this.y * 0.05);
+                    const flashIntensity = (flashCycle + 1) * 0.5 * milestoneIntensity;
+                    
+                    // Lerp between base color and flash color
+                    drawHue = this.hue + (this.flashHue - this.hue) * milestoneIntensity;
+                    drawSaturation = this.saturation + (100 - this.saturation) * milestoneIntensity;
+                    drawBrightness = this.currentBrightness + (flashIntensity * 50 * milestoneIntensity);
+                    drawSizeMult = 1.0 + (this.flashSizeMult - 1.0) * flashIntensity;
+                }
+
+                const alpha = this.hasExploded ? this.life : this.fadeDelay / 30 * 0.6;
+                const size = (this.hasExploded ? this.size : this.size * (this.fadeDelay / 30)) * drawSizeMult;
+
+                bgCtx.beginPath();
+                bgCtx.arc(this.x, this.y, size, 0, Math.PI * 2);
+                bgCtx.fillStyle = `hsla(${drawHue}, ${drawSaturation}%, ${drawBrightness}%, ${alpha})`;
+                bgCtx.fill();
+
+                if (this.hasExploded && this.life > 0.3) {
+                    const glowSize = size * 3;
+                    const gradient = bgCtx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, glowSize
+                    );
+                    gradient.addColorStop(0, `hsla(${drawHue}, ${drawSaturation}%, ${drawBrightness}%, ${alpha * 0.5})`);
+                    gradient.addColorStop(1, 'transparent');
+                    bgCtx.beginPath();
+                    bgCtx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+                    bgCtx.fillStyle = gradient;
+                    bgCtx.fill();
+                }
+            }
+
+            isDead() {
+                return this.hasExploded && this.life <= 0;
+            }
+        }
+
+        class WaterParticle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * bgCanvas.width;
+                this.y = Math.random() * bgCanvas.height;
+                this.size = Math.random() * 2.5 + 1;
+                this.baseSize = this.size;
+                this.speedX = (Math.random() - 0.5) * 0.3;
+                this.speedY = (Math.random() - 0.5) * 0.3;
+                this.opacity = Math.random() * 0.4 + 0.1;
+                this.hue = Math.random() * 60 + 180;
+                this.saturation = 50;
+                this.targetHue = this.hue;
+                this.targetOpacity = this.opacity;
+                this.targetSaturation = this.saturation;
+                this.glowRadius = 0;
+                this.targetGlowRadius = 0;
+                this.contactTime = 0;
+                this.exploded = false;
+                this.shrinking = false;
+                this.targetSize = this.size;
+                this.flashHue = 190 + Math.random() * 60; // Wide range of blues (190 to 250)
+                this.flashSpeed = Math.random() * 0.12 + 0.04;
+                this.flashSizeMult = Math.random() * 1.5 + 1.0; // Random size multiplier for flash
+                this.flashChance = Math.random(); // Used to randomize quantity
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                this.hue += (this.targetHue - this.hue) * 0.05;
+                this.opacity += (this.targetOpacity - this.opacity) * 0.05;
+                this.saturation += (this.targetSaturation - this.saturation) * 0.08;
+                this.glowRadius += (this.targetGlowRadius - this.glowRadius) * 0.06;
+                this.size += (this.targetSize - this.size) * 0.1;
+
+                if (this.x < -20 || this.x > bgCanvas.width + 20 ||
+                    this.y < -20 || this.y > bgCanvas.height + 20) {
+                    this.reset();
+                }
+            }
+
+            draw(milestoneIntensity) {
+                let drawHue = this.hue;
+                let drawSaturation = this.saturation;
+                let drawOpacity = this.opacity;
+                let drawGlowRadius = this.glowRadius;
+                let drawSize = this.size;
+
+                if (milestoneIntensity > 0 && this.flashChance < 0.45) {
+                    const flashCycle = Math.sin(time * this.flashSpeed + this.x * 0.05 + this.y * 0.05);
+                    const flashIntensity = (flashCycle + 1) * 0.5 * milestoneIntensity;
+                    
+                    drawHue = this.hue + (this.flashHue - this.hue) * milestoneIntensity;
+                    drawSaturation = this.saturation + (100 - this.saturation) * milestoneIntensity;
+                    drawOpacity = Math.min(1, this.opacity + flashIntensity * 0.6 * milestoneIntensity);
+                    drawGlowRadius = this.glowRadius + flashIntensity * 45 * milestoneIntensity;
+                    drawSize = this.size * (1 + (this.flashSizeMult - 1) * flashIntensity);
+                }
+
+                if (drawGlowRadius > 0) {
+                    const gradient = bgCtx.createRadialGradient(
+                        this.x, this.y, 0,
+                        this.x, this.y, drawGlowRadius
+                    );
+                    gradient.addColorStop(0, `hsla(${drawHue}, ${drawSaturation}%, 95%, ${drawOpacity * 0.8})`);
+                    gradient.addColorStop(0.2, `hsla(${drawHue}, ${drawSaturation}%, 85%, ${drawOpacity * 0.5})`);
+                    gradient.addColorStop(0.5, `hsla(${drawHue}, ${drawSaturation}%, 75%, ${drawOpacity * 0.2})`);
+                    gradient.addColorStop(1, 'transparent');
+                    bgCtx.beginPath();
+                    bgCtx.arc(this.x, this.y, drawGlowRadius, 0, Math.PI * 2);
+                    bgCtx.fillStyle = gradient;
+                    bgCtx.fill();
+                }
+
+                bgCtx.beginPath();
+                bgCtx.arc(this.x, this.y, drawSize, 0, Math.PI * 2);
+                bgCtx.fillStyle = `hsla(${drawHue}, ${drawSaturation}%, 90%, ${drawOpacity})`;
+                bgCtx.fill();
+            }
+        }
+
+        const waterParticles = [];
+        const explosionParticles = [];
+
+        const wheelCanvas = document.getElementById('wheel-canvas');
+        const wheelCtx = wheelCanvas.getContext('2d');
+        const wheelNumber = document.getElementById('wheel-number');
+
+        function resizeWheelCanvas() {
+            if (window.innerWidth <= 768) {
+                wheelCanvas.height = 200;
+            } else {
+                wheelCanvas.height = 600;
+            }
+        }
+        resizeWheelCanvas();
+        window.addEventListener('resize', resizeWheelCanvas);
+
+        // Click on number to jump to next milestone
+        wheelNumber.addEventListener('click', (e) => {
+            if (isResetting) return;
+            e.stopPropagation();
+            const nextMilestone = (Math.floor(explosionCount / 50) + 1) * 50;
+            const diff = nextMilestone - explosionCount;
+            
+            explosionCount = nextMilestone;
+            targetWheelProgress += diff;
+            
+            updateWheelNumber();
+            triggerMilestoneEffect();
+
+            if (explosionCount === 600) {
+                isResetting = true;
+                handleFinalMilestone();
+            }
+        });
+
+        let wheelProgress = 0;
+        let targetWheelProgress = 0;
+        let explosionCount = 0;
+        let isResetting = false;
+        const markSpacing = 40;
+        
+        function getMarkCount() {
+            return Math.ceil(wheelCanvas.height / markSpacing) + 4;
+        }
+
+        function handleFinalMilestone() {
+            // 短暂延迟后开始爆炸效果
+            setTimeout(() => {
+                wheelNumber.classList.remove('milestone');
+                wheelNumber.classList.add('annihilating');
+                
+                // 获取数字位置并产生粒子
+                const rect = wheelNumber.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                for (let i = 0; i < 100; i++) {
+                    const p = new ExplosionParticle(centerX, centerY);
+                    p.decay = Math.random() * 0.01 + 0.005;
+                    p.vx *= 2.5;
+                    p.vy *= 2.5;
+                    explosionParticles.push(p);
+                }
+
+                // 等待消失动画完成
+                setTimeout(() => {
+                    explosionCount = 0;
+                    targetWheelProgress = 0;
+                    wheelProgress = 0;
+                    
+                    wheelNumber.classList.remove('annihilating');
+                    updateWheelNumber();
+                    
+                    // 重新显现
+                    wheelNumber.classList.add('reappearing');
+                    
+                    setTimeout(() => {
+                        wheelNumber.classList.remove('reappearing');
+                        isResetting = false;
+                    }, 1200);
+                }, 1200);
+            }, 1500); // 1.5秒延迟，让双鱼座特效先展示一下
+        }
+
+        function drawWheel(milestoneIntensity) {
+            wheelCtx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+            const centerX = wheelCanvas.width / 2;
+            const canvasHeight = wheelCanvas.height;
+            const centerY = canvasHeight / 2;
+
+            wheelCtx.lineCap = 'round';
+
+            const startIndex = Math.floor(wheelProgress);
+            const fractional = wheelProgress - startIndex;
+            const currentMarkCount = getMarkCount();
+
+            for (let i = -2; i <= currentMarkCount; i++) {
+                const markIndex = startIndex + i;
+                const distFromMark = Math.abs(markIndex % 10 - 5);
+                let lineLength;
+
+                if (distFromMark === 5) {
+                    lineLength = canvasHeight * 0.85;
+                } else if (distFromMark >= 3) {
+                    lineLength = canvasHeight * 0.6;
+                } else {
+                    lineLength = canvasHeight * 0.35;
+                }
+
+                const yOffset = (i * markSpacing) - (fractional * markSpacing);
+
+                const distFromCenter = Math.abs(yOffset - centerY) / (canvasHeight / 2);
+                let alpha = 1 - Math.pow(distFromCenter, 1.5);
+                alpha = Math.max(0, Math.min(1, alpha));
+
+                let lineWidth = 6 - distFromCenter * 8;
+                lineWidth = Math.max(1, lineWidth);
+
+                // Lerp colors based on milestoneIntensity
+                let baseHue = 200 + (10 * milestoneIntensity);
+                let baseSaturation = 30 + (70 * milestoneIntensity);
+                let baseLightness = 40 + (40 * milestoneIntensity);
+
+                wheelCtx.strokeStyle = `hsla(${baseHue}, ${baseSaturation}%, ${baseLightness}%, ${alpha * 0.4})`;
+                wheelCtx.lineWidth = lineWidth;
+                wheelCtx.beginPath();
+                wheelCtx.moveTo(centerX - lineLength / 2, yOffset);
+                wheelCtx.lineTo(centerX + lineLength / 2, yOffset);
+                wheelCtx.stroke();
+            }
+        }
+
+        function updateWheelNumber() {
+            const num = explosionCount.toString().padStart(3, '0');
+            const oldHtml = wheelNumber.innerHTML;
+
+            if (oldHtml) {
+                const oldDigits = oldHtml.match(/\d/g);
+                const newDigits = num.split('');
+
+                if (oldDigits) {
+                    let html = '';
+                    for (let i = 0; i < 3; i++) {
+                        if (oldDigits[i] !== newDigits[i]) {
+                            html += `<span class="digit-roll animating">${newDigits[i]}</span>`;
+                        } else {
+                            html += `<span class="digit-roll">${newDigits[i]}</span>`;
+                        }
+                    }
+                    wheelNumber.innerHTML = html;
+
+                    setTimeout(() => {
+                        document.querySelectorAll('.digit-roll.animating').forEach(el => {
+                            el.classList.remove('animating');
+                        });
+                    }, 400);
+                } else {
+                    wheelNumber.innerHTML = `<span class="digit-roll">${num[0]}</span><span class="digit-roll">${num[1]}</span><span class="digit-roll">${num[2]}</span>`;
+                }
+            } else {
+                wheelNumber.innerHTML = `<span class="digit-roll">${num[0]}</span><span class="digit-roll">${num[1]}</span><span class="digit-roll">${num[2]}</span>`;
+            }
+        }
+
+        function triggerWheelAdvance() {
+            if (isResetting) return;
+
+            explosionCount++;
+            targetWheelProgress += 1;
+            updateWheelNumber();
+
+            if ((explosionCount - 1) % 50 === 49) {
+                triggerMilestoneEffect();
+            }
+
+            if (explosionCount === 600) {
+                isResetting = true;
+                handleFinalMilestone();
+            }
+        }
+
+        let milestoneActive = 0; // Changed from boolean to intensity (0 to 1)
+        let milestoneStartTime = 0;
+
+        function triggerMilestoneEffect() {
+            milestoneActive = 1;
+            milestoneStartTime = performance.now();
+            wheelNumber.classList.add('milestone');
+            constellationManager.triggerNext();
+        }
+
+        function updateMilestone() {
+            if (milestoneActive > 0) {
+                const elapsed = performance.now() - milestoneStartTime;
+                const duration = 2500; // Total duration including fade
+                const fadeStart = 1500; // Start fading after 1.5s
+
+                if (elapsed > duration) {
+                    milestoneActive = 0;
+                    wheelNumber.classList.remove('milestone');
+                    wheelNumber.style.textShadow = '';
+                    wheelNumber.style.transform = '';
+                    wheelNumber.style.filter = 'brightness(1)';
+                    wheelNumber.style.opacity = '1';
+                } else if (elapsed > fadeStart) {
+                    // Smoothly fade out the intensity
+                    milestoneActive = 1 - (elapsed - fadeStart) / (duration - fadeStart);
+                    
+                    // Smoothly transition CSS properties
+                    const scale = 1 + 0.05 * milestoneActive;
+                    const brightness = 1 + 0.2 * milestoneActive;
+                    wheelNumber.style.transform = `scale(${scale})`;
+                    wheelNumber.style.filter = `brightness(${brightness})`;
+                    wheelNumber.style.opacity = 1; // Keep opacity 1 but brightness changes
+                } else {
+                    milestoneActive = 1;
+                    wheelNumber.style.opacity = '1';
+                    wheelNumber.style.filter = 'brightness(1.2)';
+                }
+            }
+        }
+
+        function animateWheel() {
+            const diff = targetWheelProgress - wheelProgress;
+
+            if (Math.abs(diff) > 0.005) {
+                const baseSpeed = 0.08;
+                const maxSpeed = 0.4;
+                const distanceFactor = Math.abs(diff) * 0.12;
+                const speed = Math.min(maxSpeed, Math.max(baseSpeed, distanceFactor));
+
+                if (diff > 0) {
+                    wheelProgress += speed;
+                    if (wheelProgress > targetWheelProgress) {
+                        wheelProgress = targetWheelProgress;
+                    }
+                } else {
+                    wheelProgress -= speed;
+                    if (wheelProgress < targetWheelProgress) {
+                        wheelProgress = targetWheelProgress;
+                    }
+                }
+            }
+
+            updateMilestone();
+            drawWheel(milestoneActive);
+            requestAnimationFrame(animateWheel);
+        }
+
+        animateWheel();
+        for (let i = 0; i < 180; i++) {
+            waterParticles.push(new WaterParticle());
+        }
+
+        // Mouse/Touch tracking
+        let bgMouseX = 0, bgMouseY = 0;
+        const updateCoords = (e) => {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            bgMouseX = clientX;
+            bgMouseY = clientY;
+        };
+
+        document.addEventListener('mousemove', updateCoords);
+        document.addEventListener('touchstart', updateCoords);
+        document.addEventListener('touchmove', updateCoords);
+
+        const handleInteraction = (clientX, clientY) => {
+            waterParticles.forEach((particle) => {
+                const dx = clientX - particle.x;
+                const dy = clientY - particle.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 100 && !particle.exploded) {
+                    for (let i = 0; i < 10; i++) {
+                        explosionParticles.push(new ExplosionParticle(particle.x, particle.y));
+                    }
+                    particle.exploded = true;
+                    triggerWheelAdvance();
+                    setTimeout(() => {
+                        particle.reset();
+                    }, 100);
+                }
+            });
+        };
+
+        document.addEventListener('click', (e) => handleInteraction(e.clientX, e.clientY));
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+
+        let time = 0;
+
+            function animateBg() {
+                time++;
+                bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+                constellationManager.update(time);
+                constellationManager.draw();
+
+                waterParticles.forEach((particle, index) => {
+                    const dx = bgMouseX - particle.x;
+                    const dy = bgMouseY - particle.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 120 && !particle.exploded) {
+                        particle.contactTime++;
+
+                        const force = (120 - dist) / 120;
+                        particle.x -= dx * force * 0.025;
+                        particle.y -= dy * force * 0.025;
+
+                        particle.targetHue = Math.random() * 40 + 190;
+                        particle.targetOpacity = Math.min(1, particle.opacity + 0.06);
+                        particle.targetSaturation = 100;
+                        particle.targetGlowRadius = Math.min(60, particle.targetGlowRadius + 3);
+
+                        if (particle.contactTime > 60 && particle.contactTime <= 80) {
+                            const shrinkProgress = (particle.contactTime - 60) / 20;
+                            particle.targetSize = particle.baseSize * (1 - shrinkProgress * 0.7);
+                            particle.targetGlowRadius = 60 + shrinkProgress * 40;
+                            particle.targetOpacity = 1;
+                        }
+
+                        if (particle.contactTime > 80) {
+                            for (let i = 0; i < 10; i++) {
+                                explosionParticles.push(new ExplosionParticle(particle.x, particle.y));
+                            }
+                            particle.exploded = true;
+                            triggerWheelAdvance();
+                            setTimeout(() => {
+                                particle.reset();
+                            }, 100);
+                        }
+                    } else if (!particle.exploded) {
+                        particle.contactTime = Math.max(0, particle.contactTime - 1);
+                        particle.targetHue = Math.random() * 60 + 180;
+                        particle.targetOpacity = Math.random() * 0.4 + 0.1;
+                        particle.targetSaturation = 50;
+                        particle.targetGlowRadius = Math.max(0, particle.targetGlowRadius - 1);
+                        particle.targetSize = particle.baseSize;
+                    }
+
+                    particle.update();
+                    particle.draw(milestoneActive);
+                });
+
+                for (let i = explosionParticles.length - 1; i >= 0; i--) {
+                    explosionParticles[i].update(time);
+                    explosionParticles[i].draw(milestoneActive);
+                    if (explosionParticles[i].isDead()) {
+                        explosionParticles.splice(i, 1);
+                    }
+                }
+
+                requestAnimationFrame(animateBg);
+            }
+            animateBg();
+
+        // Ripple Canvas
+        const rippleCanvas = document.getElementById('ripple-canvas');
+        const rippleCtx = rippleCanvas.getContext('2d');
+
+        function resizeRippleCanvas() {
+            rippleCanvas.width = window.innerWidth;
+            rippleCanvas.height = window.innerHeight;
+        }
+        resizeRippleCanvas();
+        window.addEventListener('resize', resizeRippleCanvas);
+
+        class Ripple {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 0;
+                this.maxRadius = Math.random() * 80 + 60;
+                this.speed = Math.random() * 2 + 2;
+                this.opacity = 1;
+                this.lineWidth = Math.random() * 1.5 + 0.5;
+                this.hue = Math.random() * 40 + 180;
+            }
+
+            update() {
+                this.radius += this.speed;
+                this.opacity = 1 - (this.radius / this.maxRadius);
+            }
+
+            draw() {
+                if (this.opacity <= 0) return;
+                
+                rippleCtx.beginPath();
+                rippleCtx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                rippleCtx.strokeStyle = `hsla(${this.hue}, 85%, 65%, ${this.opacity * 0.6})`;
+                rippleCtx.lineWidth = this.lineWidth;
+                rippleCtx.stroke();
+
+                // Inner ripple
+                if (this.radius > 20) {
+                    rippleCtx.beginPath();
+                    rippleCtx.arc(this.x, this.y, this.radius * 0.6, 0, Math.PI * 2);
+                    rippleCtx.strokeStyle = `hsla(${this.hue + 20}, 90%, 75%, ${this.opacity * 0.4})`;
+                    rippleCtx.lineWidth = this.lineWidth * 0.5;
+                    rippleCtx.stroke();
+                }
+            }
+
+            isDead() {
+                return this.opacity <= 0;
+            }
+        }
+
+        const ripples = [];
+
+        const createRipples = (clientX, clientY) => {
+            const numRipples = Math.floor(Math.random() * 3) + 2;
+            for (let i = 0; i < numRipples; i++) {
+                const offsetX = (Math.random() - 0.5) * 60;
+                const offsetY = (Math.random() - 0.5) * 60;
+                ripples.push(new Ripple(clientX + offsetX, clientY + offsetY));
+            }
+        };
+
+        document.addEventListener('click', (e) => createRipples(e.clientX, e.clientY));
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                createRipples(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+
+        function animateRipple() {
+            rippleCtx.clearRect(0, 0, rippleCanvas.width, rippleCanvas.height);
+
+            for (let i = ripples.length - 1; i >= 0; i--) {
+                ripples[i].update();
+                ripples[i].draw();
+                if (ripples[i].isDead()) {
+                    ripples.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animateRipple);
+        }
+        animateRipple();
+
+        // Navigation scroll effect
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const delay = entry.target.dataset.delay || 0;
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, delay);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.tank-card, .feature-item').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Hide cursor on mobile
+        if ('ontouchstart' in window) {
+            cursor.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
