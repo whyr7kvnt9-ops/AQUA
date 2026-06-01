@@ -122,9 +122,9 @@
         #wheel-counter {
             position: fixed;
             left: 30px;
-            top: 50%;
-            height: 600px;
-            transform: translateY(-50%);
+            top: 0;
+            height: 100vh;
+            transform: none;
             z-index: 100;
             display: flex;
             align-items: center;
@@ -133,7 +133,7 @@
 
         #wheel-canvas {
             width: 20px;
-            height: 600px;
+            height: 100vh;
         }
 
         #wheel-number {
@@ -1786,7 +1786,7 @@
             if (window.innerWidth <= 768) {
                 wheelCanvas.height = 200;
             } else {
-                wheelCanvas.height = 600;
+                wheelCanvas.height = window.innerHeight;
             }
         }
         resizeWheelCanvas();
